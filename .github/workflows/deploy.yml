@@ -1,0 +1,46 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Build WAR file with Maven
+      run: mvn clean package
+
+    - name: Debug listing target files
+      run: ls -lah target/
+
+    - name: Copy WAR to EC2 via SSH
+      uses: appleboy/scp-action@v0.1.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ubuntu
+        key: ${{ secrets.EC2_SSH_KEY }}
+        source: target/*.war
+        target: /home/ubuntu/
+
+    - name: Deploy WAR on EC2
+      uses: appleboy/ssh-action@v0.1.7
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ubuntu
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          sudo systemctl stop tomcat10
+          sudo rm -rf /var/lib/tomcat10/webapps/ROOT
+          sudo mv /home/ubuntu/*.war /var/lib/tomcat10/webapps/ROOT.war
+          sudo systemctl start tomcat10
