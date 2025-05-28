@@ -38,5 +38,6 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
           sudo systemctl stop tomcat10
+          sudo rm -rf /var/lib/tomcat10/webapps/ROOT
           sudo mv /home/ubuntu/*.war /var/lib/tomcat10/webapps/ROOT.war
           sudo systemctl start tomcat10
