@@ -1,3 +1,4 @@
+# Dummy change to trigger deployment
 name: Deploy to AWS EC2
 
 on:
